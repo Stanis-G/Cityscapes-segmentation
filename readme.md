@@ -9,19 +9,22 @@ Since pixels in ground truth images are corrupted (there have to be 19 unique co
 
 # Models structure
 ## FCN
-FCN model consists of encoder and decoder parts. Encoder includes 5 convolutional cells, where each cell is convolutinal layer with leaky relu activation followed by maxpool. Each cell reduces image linear sizes by 2, so the output feature map has shape 8 x 8. Decoder uses 5 transposed convolutional layers, and each increases image linear size by 2. So, each transposed convolution has corresponding convolutional cell from endoder, meaning that input image shape of first one is equal to output image shape of second one. Each transposed convolution layer, except last one, has leaky relu activation.
+FCN model consists of encoder and decoder parts. Encoder includes 5 convolutional cells, where each cell is convolutinal layer with leaky relu activation followed by maxpool and batchnorm. Each cell reduces image linear sizes by 2, so the output feature map has shape 8 x 8. Decoder uses 5 transposed convolutional layers, and each increases image linear size by 2. So, each transposed convolution has corresponding convolutional cell from endoder, meaning that input image shape of first one is equal to output image shape of second one. Each transposed convolution layer, except last one, has leaky relu activation and batchnorm.
+
+Each layer is initialized with He weights since the only activation used is leaky relu.
 
 Summarized:
-- (convolutional_layer + leaky_relu + maxpool) x 5
-- (transposed_convolutional_layer + leaky_relu) x 4
-- transposed_convolutional_layer
+- Encoder: (convolutional_layer + leaky_relu + maxpool + batchnorm) x 5
+- Decoder: (transposed_convolutional_layer + leaky_relu) x 4 + transposed_convolutional_layer
+
+Model uses custom Cross Entropy Loss + Dice Loss and Adam optimizer
 
 ### Result metric
-Pixel wised accuracy was used to evaluate model performance. The metric value on train data is 72% and on valid data is 70%. Note that valid dataset was not used for any kind of model optimization.
+Pixel wised accuracy was used to evaluate model performance. The metric value on train data is 75% and on valid data is 71%.
+
+Dice Coefficient also used for preformance evaluation, value on train and valid data is 35% and 32% correspondingly
 
 ### Considerations
 1. **Data preparation**. Augmentation technique, like mirroring, can be applied to every image.
-2. **Weights initialization**. Using ReLU as activation function implies He inititalization for better data and gradient flow.
-3. **Model architecture**. The predicted image consists of much simpler shapes than ground truth image. It may indicate that model failed to learn complex shapes, which may be potentially solved with adding more convolutional layers. Also, number of filters in existing layers can be increased.
-4. **Regularization**. Model performance can be increased with adding Batch Normalization layers, which will enable model to learn layers output distribution, thus accelerating model convergence, and solve potential overfitting problem.
-5. **Hyperparameters optimization**. No hyperparameters optimized at current step.
+2. **Model architecture**. The predicted image consists of much simpler shapes than ground truth image. It may indicate that model failed to learn complex shapes, which may be potentially solved with adding more convolutional layers. Also, number of filters in existing layers can be increased.
+3. **Hyperparameters optimization**. No hyperparameters optimized at current step.

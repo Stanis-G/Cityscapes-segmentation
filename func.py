@@ -1,10 +1,10 @@
 import os
-from PIL import Image
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
 
 import torch
+from torch import nn
 from torch.nn.functional import one_hot
 from torch.utils.data import Dataset
 
@@ -115,12 +115,29 @@ def dsc_score(predict, target, channel_dim=1):
 
     # Calc untersections and unions for each class
     intersection = (onehot_predict * onehot_target).sum(dim=(1, 2))
-    union = onehot_predict.sum(dim=(1, 2)) + onehot_target.sum(dim=(1, 2)) - intersection
+    union = onehot_predict.sum(dim=(1, 2)) + onehot_target.sum(dim=(1, 2))
 
     # Calc mean dsc by classes
-    dsc = (2 * intersection / union).mean()
+    dsc_by_classes = (2 * intersection / union)
+    dsc_by_classes.nan_to_num_(1) # replace nan with 1 (1 means fully corresponding masks)
+    dsc = dsc_by_classes.mean()
 
     return dsc.item()
+
+
+class CrossEntropyWithDiceLoss(nn.Module):
+    """Compute Cross Entropy Loss + Dice Loss"""
+
+    def __init__(self, ce_weight=1, dsc_weight=1):
+        super().__init__()
+        self.ce_loss_fn = nn.CrossEntropyLoss()
+        self.ce_weight = ce_weight
+        self.dsc_weight = dsc_weight
+        
+    def forward(self, predict, target):
+        ce_loss = self.ce_loss_fn(predict, target)
+        dsc_loss = 1 - dsc_score(predict, target)
+        return self.ce_weight * ce_loss + self.dsc_weight * dsc_loss
 
 
 def plot_learning_curve(y_dict, loc='center right'):
