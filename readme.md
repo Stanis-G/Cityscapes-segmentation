@@ -28,3 +28,14 @@ Dice Coefficient also used for preformance evaluation, value on train and valid 
 1. **Data preparation**. Augmentation technique, like mirroring, can be applied to every image.
 2. **Model architecture**. The predicted image consists of much simpler shapes than ground truth image. It may indicate that model failed to learn complex shapes, which may be potentially solved with adding more convolutional layers. Also, number of filters in existing layers can be increased.
 3. **Hyperparameters optimization**. No hyperparameters optimized at current step.
+
+## Unet
+Unet architecture is the same as FCN with skip connections between corresponding encoder and decoder layers. In the decoder, feature maps from lower layers are concatenated with the ones passed from encoder via skip connections.
+
+### Result metric
+Pixel wised accuracy is 74% and 70% for train and valid data
+Dice Coefficient is 35% and 32% for train and valid data
+
+### Considerations
+1. **FCN considerations**. Every FCN consideration is fair for Unet
+2. **Feature alignement**. Feature maps from previous layers and skip connections may not be spacially aligned, so it requires additional check
